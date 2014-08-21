@@ -1,18 +1,33 @@
 ---
-title: "Peer Assessment 2"
+title: Damage in properties and issues with respect to population health caused by
+  severe weather events
 author: "Francisco J. Garcia R."
 date: "Tuesday, August 19, 2014"
 output:
-    html_document:
-        theme: cerulean
+  pdf_document: default
+  html_document:
+    theme: cerulean
 ---
 
 ##Synopsis 
-Synopsis: Immediately after the title, there should be a synopsis which describes and summarizes your analysis in at most 10 complete sentences.
 
+The goal of this report is show the most harmful events that can be affect the united states, in order to take some decisions related to the future investments in planning and management of damages.
+
+Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern.
+
+This project involves exploring the U.S. National Oceanic and Atmospheric Administration's (NOAA) storm database.
+
+This database tracks characteristics of major storms and weather events in the United States, including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
+
+I selected and I filtered some variables that form the dataset, in order to explain the next questions:
+- Across the United States, which types of events are most harmful with respect to population health?
+- Across the United States, which types of events have the greatest economic consequences?
+
+In the present report, I explain the codebook and code file that I developed in order to complete and show the correct answers.
+
+The project was developed using Rstudio and some toolbox that it improved the analysis process. You can find more details of the assessment in the readme file.
 
 ##Data Processing
-There should be a section titled Data Processing which describes (in words and code) how the data were loaded into R and processed for analysis. In particular, your analysis must start from the raw CSV file containing the data. You cannot do any preprocessing outside the document. If preprocessing is time-consuming you may consider using the cache = TRUE option for certain code chunks.
 
 ### Initial configuration
 
@@ -29,14 +44,29 @@ IsRutilsInstalled <- require("R.utils")
 if(!IsRutilsInstalled){
     install.packages("R.utils")
     library(R.utils)
-}
+    }
 
+IsGridInstalled <- require("grid")
+if(!IsGridInstalled){
+    install.packages("grid")
+    library("grid")
+    }
+
+IsGridExtraInstalled <- require("gridExtra")
+if(!require("gridExtra")){
+    install.packages("gridExtra")
+    library("gridExtra")
+    }
+
+library(ggplot2)
 ```
 
 ### Getting data
+
+This process was developed through of the next steps:
 1. Download compressed file
 2. Extract file
-3. Load data into  `OriginalData`
+3. Load data into the variable: `OriginalData`
 
 ```{r echo=TRUE, cache=TRUE, cache.lazy=TRUE}
 GettingData <- function(){
@@ -61,15 +91,101 @@ GettingData <- function(){
 
 OriginalData <- GettingData();
 ```
-### cleaning data
 
-```{r echo=TRUE}
-head(OriginalData)
+### cleaning and processing data
+In order to clean the input data, I selected and I filtered the next variables:
+
+- `dataGroupByEventTypeInjuries` Represent the total injuries caused by each type of event
+- `graphInjuries` Graph that explain the most harmful type of event with respect to population health, the graph filter the `dataGroupByEventTypeInjuries` > 500
+- `dataGroupByEventTypeFatalities` Represent the total fatalities per type of event
+- `graphFatalities` Graph that explain the most harmful type of event with respect to population health, the graph filter the `dataGroupByEventTypeFatalities` > 100
+- `dataGroupByEventTypePROPDMG` Represent the Cost of damage in Properties caused by each type of event
+- `graphDamage` Graph that explain the Cost of damage in Properties caused by each type of event, the graph filter the `PROPDMGEXP` = "B" and Cost > 4 Billions
+
+```{r echo=TRUE, cache=TRUE, cache.lazy=TRUE}
+#Total INJURIES
+dataGroupByEventTypeInjuries <- aggregate(OriginalData$INJURIES, 
+                            list(EVTYPE = OriginalData$EVTYPE), 
+                            sum,
+                            na.action =FALSE )
+
+#Clear the NA's values
+dataGroupByEventTypeInjuries <- dataGroupByEventTypeInjuries[complete.cases(dataGroupByEventTypeInjuries),]
+
+#Filter the type of event which  500  facts or more
+dataGroupByEventTypeInjuries <- dataGroupByEventTypeInjuries[which(dataGroupByEventTypeInjuries$x>500),]
+
+#Load the chart of injuries
+graphInjuries <- qplot(x = EVTYPE,y =  x, data=dataGroupByEventTypeInjuries)  + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+    xlab("Event Type") +
+    ylab("Number of Injuries") +
+    ggtitle("Injuries per event type")
+
+#Total FATALITIES
+dataGroupByEventTypeFatalities <- aggregate(OriginalData$FATALITIES, 
+                            list(EVTYPE = OriginalData$EVTYPE), 
+                            sum,
+                            na.action =FALSE )
+#Clear the NA's values
+dataGroupByEventTypeFatalities <- dataGroupByEventTypeFatalities[complete.cases(dataGroupByEventTypeFatalities),]
+
+#Filter the type of event which  100  facts or more
+dataGroupByEventTypeFatalities <- dataGroupByEventTypeFatalities[which(dataGroupByEventTypeFatalities$x>100),]
+
+#Load the chart of fatalities
+graphFatalities <- qplot(x = EVTYPE,y =  x, data=dataGroupByEventTypeFatalities)  + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+    xlab("Event Type") +
+    ylab("Number of fatalities") +
+    ggtitle("Fatalities per event type")
+
+
+#Cost of damage in Properties:
+dataGroupByEventTypePROPDMG <- aggregate(OriginalData$PROPDMG, 
+                            list(EVTYPE = OriginalData$EVTYPE, PROPDMGEXP = OriginalData$PROPDMGEXP), 
+                            sum,
+                            na.action =FALSE )
+
+#Clear the NA's values
+dataGroupByEventTypePROPDMG <- dataGroupByEventTypePROPDMG[complete.cases(dataGroupByEventTypePROPDMG),]
+
+#Filter the type of event which PROPDMGEXP="B" (BILLIONS)
+dataGroupByEventTypePROPDMG <- dataGroupByEventTypePROPDMG[which(dataGroupByEventTypePROPDMG$PROPDMGEXP=="B") ,]
+
+#Filter the type of event whichcost > 4 (BILLIONS)
+dataGroupByEventTypePROPDMG <- dataGroupByEventTypePROPDMG[which(dataGroupByEventTypePROPDMG$x>4) ,]
+
+#Load the chart of Cost of damage in Properties:
+graphDamage <- qplot(x = EVTYPE,y =  x, data=dataGroupByEventTypePROPDMG)  + 
+    theme(axis.text.x = element_text(angle = 90, hjust = 1)) + 
+    xlab("Event Type") +
+    ylab("Cost (BILLIONS)") +
+    ggtitle("Cost of damage in Properties  per event type")
 ```
 
-
 ##Results 
-There should be a section titled Results in which your results are presented.
+
+The goal of this report is show the most harmful events that can be affect the united states, in order to take some decisions related to the future investments in planning and management of damages.
+
+- Across the United States, which types of events (as indicated in the `EVTYPE` variable) are most harmful with respect to population health?
+```{r echo=TRUE,fig.width=15, fig.height=8}
+#Plot both graphs into the same chart
+grid.arrange(graphInjuries, 
+             graphFatalities, 
+             ncol = 2, 
+             main = "Types of events most harmful with respect to population health")
+```
+**Answer:** The most harmful type of event for the population health is the **Tornado**, because it caused the most amount of *injuries and fatalities* in the United states.
+
+- Across the United States, which types of events have the greatest economic consequences?
+```{r echo=TRUE,fig.width=15, fig.height=8}
+#Plot the chart previously generated
+summary(dataGroupByEventTypePROPDMG)
+graphDamage
+
+```
+**Answer:** the greatest economic consequences caused by type of event is the **Floods**, because it caused the most amount of  damages in properties in the United states.
 
 ##Aditional info
 For debugging purposes, the specification of the machine:
