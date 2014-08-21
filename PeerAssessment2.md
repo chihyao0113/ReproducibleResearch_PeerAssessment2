@@ -1,14 +1,6 @@
----
-title: Damage in properties and issues with respect to population health caused by
-  severe weather events
-author: "Francisco J. Garcia R."
-date: "Tuesday, August 19, 2014"
-output:
-  html_document:
-    keep_md: yes
-    theme: cerulean
-  pdf_document: default
----
+# Damage in properties and issues with respect to population health caused by severe weather events
+Francisco J. Garcia R.  
+Tuesday, August 19, 2014  
 
 ##Synopsis 
 
@@ -34,8 +26,8 @@ The project was developed using Rstudio and some toolbox that it improved the an
 
 The goal of this section is create some variables that will be used for processing data
 
-```{r echo=TRUE}
 
+```r
 #Variables
 urlData <- "https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2"
 DataFile_bz2 <- "repdata_data_StormData.csv.bz2"
@@ -49,12 +41,30 @@ if(!IsRutilsInstalled){
     }
 
 IsGridInstalled <- require("grid")
+```
+
+```
+## Loading required package: grid
+```
+
+```r
 if(!IsGridInstalled){
     install.packages("grid")
     library("grid")
     }
 
 IsGridExtraInstalled <- require("gridExtra")
+```
+
+```
+## Loading required package: gridExtra
+```
+
+```
+## Warning: package 'gridExtra' was built under R version 3.1.1
+```
+
+```r
 if(!require("gridExtra")){
     install.packages("gridExtra")
     library("gridExtra")
@@ -70,7 +80,8 @@ This process was developed through of the next steps:
 2. Extract file
 3. Load data into the variable: `OriginalData`
 
-```{r echo=TRUE, cache=TRUE, cache.lazy=TRUE}
+
+```r
 GettingData <- function(){
     #Download compressed file
     if(!file.exists(DataFile_bz2)){
@@ -104,7 +115,8 @@ In order to clean the input data, I selected and I filtered the next variables:
 - `dataGroupByEventTypePROPDMG` Represent the Cost of damage in Properties caused by each type of event
 - `graphDamage` Graph that explain the Cost of damage in Properties caused by each type of event, the graph filter the `PROPDMGEXP` = "B" and Cost > 4 Billions
 
-```{r echo=TRUE, cache=TRUE, cache.lazy=TRUE}
+
+```r
 #Total INJURIES
 dataGroupByEventTypeInjuries <- aggregate(OriginalData$INJURIES, 
                             list(EVTYPE = OriginalData$EVTYPE), 
@@ -171,27 +183,72 @@ graphDamage <- qplot(x = EVTYPE,y =  x, data=dataGroupByEventTypePROPDMG)  +
 The goal of this report is show the most harmful events that can be affect the united states, in order to take some decisions related to the future investments in planning and management of damages.
 
 - Across the United States, which types of events (as indicated in the `EVTYPE` variable) are most harmful with respect to population health?
-```{r echo=TRUE,fig.width=15, fig.height=8}
+
+```r
 #Plot both graphs into the same chart
 grid.arrange(graphInjuries, 
              graphFatalities, 
              ncol = 2, 
              main = "Types of events most harmful with respect to population health")
 ```
+
+![plot of chunk unnamed-chunk-4](./PeerAssessment2_files/figure-html/unnamed-chunk-4.png) 
 **Answer:** The most harmful type of event for the population health is the **Tornado**, because it caused the most amount of *injuries and fatalities* in the United states.
 
 - Across the United States, which types of events have the greatest economic consequences?
-```{r echo=TRUE,fig.width=15, fig.height=8}
+
+```r
 #Plot the chart previously generated
 summary(dataGroupByEventTypePROPDMG)
-graphDamage
+```
 
 ```
+##                EVTYPE    PROPDMGEXP       x         
+##  FLOOD            :1   B      :8    Min.   :  5.00  
+##  HURRICANE        :1          :0    1st Qu.:  5.11  
+##  HURRICANE/TYPHOON:1   -      :0    Median :  5.50  
+##  RIVER FLOOD      :1   ?      :0    Mean   : 32.09  
+##  STORM SURGE      :1   +      :0    3rd Qu.: 48.30  
+##  TORNADO          :1   0      :0    Max.   :122.50  
+##  (Other)          :2   (Other):0
+```
+
+```r
+graphDamage
+```
+
+![plot of chunk unnamed-chunk-5](./PeerAssessment2_files/figure-html/unnamed-chunk-5.png) 
 **Answer:** the greatest economic consequences caused by type of event is the **Floods**, because it caused the most amount of  damages in properties in the United states.
 
 ##Aditional info
 For debugging purposes, the specification of the machine:
-```{r echo=TRUE}
+
+```r
 sessionInfo()
+```
+
+```
+## R version 3.1.0 (2014-04-10)
+## Platform: x86_64-w64-mingw32/x64 (64-bit)
+## 
+## locale:
+## [1] LC_COLLATE=Spanish_Colombia.1252  LC_CTYPE=Spanish_Colombia.1252   
+## [3] LC_MONETARY=Spanish_Colombia.1252 LC_NUMERIC=C                     
+## [5] LC_TIME=Spanish_Colombia.1252    
+## 
+## attached base packages:
+## [1] grid      stats     graphics  grDevices utils     datasets  methods  
+## [8] base     
+## 
+## other attached packages:
+## [1] ggplot2_1.0.0     gridExtra_0.9.1   R.utils_1.32.4    R.oo_1.18.0      
+## [5] R.methodsS3_1.6.1
+## 
+## loaded via a namespace (and not attached):
+##  [1] colorspace_1.2-4 digest_0.6.4     evaluate_0.5.5   formatR_0.10    
+##  [5] gtable_0.1.2     htmltools_0.2.4  knitr_1.6        labeling_0.2    
+##  [9] MASS_7.3-31      munsell_0.4.2    plyr_1.8.1       proto_0.3-10    
+## [13] Rcpp_0.11.2      reshape2_1.4     rmarkdown_0.2.49 scales_0.2.4    
+## [17] stringr_0.6.2    tools_3.1.0      yaml_2.1.13
 ```
 
